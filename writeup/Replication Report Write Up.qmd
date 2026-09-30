@@ -2,8 +2,8 @@
 title: "Replication of Study 2 by Jamie Amemiya, Gail D. Heyman, and Caren Walker (2024, Cognitive Science)"
 author: "Catherine Qing (cqing@ucsd.edu)"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
-format:
-  html:
+format: 
+  pdf:
     toc: true
     toc_depth: 3
 ---
