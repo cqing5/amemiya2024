@@ -1,14 +1,12 @@
 ---
-title: "Replication of Study X by Sample & Sample (20xx, Psychological Science)"
-author: "Replication Author[s] (contact information)"
+title: "Replication of Study 2 by Jamie Amemiya, Gail D. Heyman, and Caren Walker (2024, Cognitive Science)"
+author: "Catherine Qing (cqing@ucsd.edu)"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 format:
   html:
     toc: true
     toc_depth: 3
 ---
-
-<!-- Replication reports should all use this template to standardize reporting across projects.  These reports will be public supplementary materials that accompany the summary report(s) of the aggregate results. -->
 
 ## Introduction
 
