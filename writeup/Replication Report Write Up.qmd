@@ -25,7 +25,7 @@ They will also provide an open-ended response justifying their decision.
 
 This study will be implemented using Qualtrics. There will also be several attention/comprehension and manipulation checks throughout the survey. Anyone who fails a comprehension check will be excluded. One potential challenge I anticipate encountering is exclusions for failing comprehension checks. The procedure is a bit demanding (there are two training modules, a news story with attention checks and feedback, and several open-ended responses), so I am a little concerned I may lose a decent number of participants if students rush through the study, since it is an unpaid/course credit survey.
 
-See the project repository [here](https://example.com) and the original paper  [here](https://example.com).
+See the project repository [here](https://github.com/cqing5/amemiya2024) and the original paper  [here](https://github.com/cqing5/amemiya2024/blob/main/original_paper/Cognitive%20Science%20-%202024%20-%20Amemiya%20-%20Calculated%20Comparisons%20%20Manufacturing%20Societal%20Causal%20Judgments%20by%20Implying%20Different.pdf).
 
 ## Methods
 
