@@ -12,20 +12,7 @@ format:
 
 Study 2 of Amemiya et al. (2024) finds that adults who wanted to persuade others to support or reject a public policy selectively presented comparison cases that encourage counterfactual inferences consistent with their position. Specifically, participants in the *Motivated to Support* condition were more likely to show the supporting comparison cases than participants in the *Motivated to Reject* condition, and that participants in the *Motivated to Reject* condition were more likely to show the rejecting comparison cases than participants in the *Motivated to Support* condition. 
 
-I chose this study because I'm interested in the development of our ability to understand that the way evidence was selected affects how much weight we should give it. Past work has shown that young children are sensitive to how samples are generated (Kushnir et al., 2010) and can strategically select true evidence to deceive others (Rhodes et al., 2015). These studies, along with the target study, primarily approach the problem from the perspective of the person producing or selecting evidence, but I aim to also investigate the less-studied child-as-consumer side and to examine the relation between these two sides of the problem: 1) understanding how to select evidence to persuade someone, and 2) recognizing that the process by which true evidence is selected affects the value of that evidence (how informative it is). This project would provide an important foundation for my future work by establishing whether the evidence-selection behavior observed in adults can be replicated before extending the paradigm to investigate how children might produce and evaluate selectively presented evidence.
-
-Participants will read a vignette about a novel virus spreading in five regions: Hawaii (US), Hokkaido (Japan), Te Waipounamu (New Zealand), Oregon (US), and California (US). In this vignette, leaders were unsure how to respond, so they designed a set of policies ("Policy A"). Only Hawaii implemented Policy A, on Day 5. The other four regions waited to see whether it worked. Participants will be randomly assigned to imagine being a politician who either strongly believes Policy A would be effective (*Motivated to Support* condition), or strongly believes Policy A would be ineffective (*Motivated to Reject* condition). Participants will then view a full five-location graph and describe the data in their own words. The graph is a figure that plots new virus cases over Days 0-10 for all five regions, with a vertical line at Day 5 marking the intervention. Hawaii's cases are shown to drop sharply right after Day 5, so there was strong temporal covariation between policy and decline in every condition. Oregon and California kept climbing after Day 5, implying the supporting counterfactual inference that Hawaii's cases would have continued to rise without the policy. Hokkaido and Te Waipounamu declined on their own after Day 5, implying the rejecting counterfactual inference that Hawaii's cases would have fallen even without the policy.
-
-For the primary outcome, participants will choose one of the four following graphs to present on the nightly news in support of their assigned position:
-(a) Target only: Hawaii's trajectory alone
-(b) Target + Supporting Comparisons: Hawaii plus Oregon and California
-(c) Target + Rejecting Comparisons: Hawaii plus Hokkaido and Te Waipounamu
-(d) Target + All Comparisons: all five regions
-Participants will provide an open-ended explanation for their choice. I will test whether participants selectively present comparisons consistent with their assigned position. I will also examine whether the emphasized dimension of the data interacts with experimental condition, following the authors’ approach.
-
-The authors implemented the survey using Qualtrics, but I will be using jsPsych. I will use the authors’ publicly available materials as a starting point, adapting them as needed. Participants will complete attention, comprehension, and manipulation checks throughout the task. Anyone who fails a comprehension check will be excluded, and I will preregister the exclusion criteria before data collection. One potential challenge is participant attrition or exclusion due to failed comprehension checks, particularly because the task includes training modules, corrective feedback, and open-ended responses. To account for this, I will recruit approximately 20% more participants than the target analyzable sample to account for exclusions, using the exclusion rate reported in the original study (approximately 14%) as an estimate. Because the original study provides a useful benchmark for anticipating exclusions, oversampling should help with securing an adequate final sample. Furthermore, if very few participants select certain graphs in some experimental conditions, logistic regression may not provide reliable estimates. If this is the case, I will use a Chi-square test to see whether choosing a particular option (e.g., Target + Rejecting Comparisons) vs. not (any other option) varies by condition. In addition, I will test whether the emphasized dimension (islands vs. U.S. states) predicts participants’ causal judgments and whether it interacts with experimental condition, as in the original study.
-
-Beyond replicating the original study, I am interested in using the extra time available to begin investigating how people evaluate evidence selected by others. One option would be to present participants with a graph chosen by another politician who supports or opposes Policy A and ask how convincing they find the politician’s argument (the order in which this and the main trial are presented would be counterbalanced). This would examine whether people recognize that evidence can be factually accurate yet selectively presented to support a particular conclusion, and whether their evaluations are sensitive to the selection process rather than just the evidence itself.
+I chose to replicate this study because I'm interested in the development of our ability to understand that the way evidence was selected affects how much weight we should give it. Past work has shown that young children are sensitive to how samples are generated (Kushnir et al., 2010) and can strategically select true evidence to deceive others (Rhodes et al., 2015). These studies, along with the target study, primarily approach the problem from the perspective of the person producing or selecting evidence, but I aim to also investigate the less-studied child-as-consumer side and to examine the relation between these two sides of the problem: 1) understanding how to select evidence to persuade someone, and 2) recognizing that the process by which true evidence is selected affects the value of that evidence (how informative it is). This project would provide an important foundation for my future work by establishing whether the evidence-selection behavior observed in adults can be replicated before extending the paradigm to investigate how children might produce and evaluate selectively presented evidence.
 
 Through this project, I hope to gain both technical skills in implementing behavioral experiments and a deeper understanding of how to make thoughtful and adaptive analytical decisions. I have primarily used Qualtrics to build studies and have little hands-on experience with jsPsych, so I am excited to learn how to use it to build an interactive behavioral task and implement experimental counterbalancing. I also hope to become more comfortable navigating the analytical decisions that arise when working with real data, such as determining which analyses are most appropriate for different research questions and the data distribution you get. I want to improve my understanding of when the assumptions of a planned analysis may be violated and when additional and/or alternative statistical tests are warranted. For example, I am interested in learning how to anticipate and address potential analytical issues. Broadly, I hope this project will help equip me with the technical independence to implement behavioral studies and the statistical judgment to make rigorous, well-justified decisions throughout the research process.
 
@@ -35,30 +22,54 @@ See the project repository [here](https://github.com/cqing5/amemiya2024) and the
 ## Methods
 
 ### Power Analysis
-
-Original effect size, power analysis for samples to achieve 80%, 90%, 95% power to detect that effect size.  Considerations of feasibility for selecting planned sample size.
+I haven't run the power analysis yet, but n = 120 in the original study was based on a power analysis in G*Power that indicated 61 participants would be needed to detect a medium to large effect size (w = .40) of study condition with a power of .80 and alpha level of .05. The authors roughly doubled this sample size to allow for exploratory analyses. 
 
 ### Planned Sample
-
-Planned sample size and/or termination rule, sampling frame, known demographics if any, preselection rules if any.
+Participants will consist of undergraduate students attending a large, public university in the West Coast region of the United States. To account for participant attrition or exclusion due to failed comprehension checks, I will recruit approximately 20% more participants than the target analyzable sample to account for exclusions, using the exclusion rate reported in the original study (approximately 14%) as an estimate. As a result, I aim to recruit 144 participants from UCSD SONA. 
 
 ### Materials
-
-All materials - can quote directly from original article - just put the text in quotations and note that this was followed precisely.  Or, quote directly and just point out exceptions to what was described in the original article.
+This replication will utilize a web-based experiment built with jsPsych that is expected to take each participant a maximum of 10-15 minutes to complete. (Once I have the link to the experiment, I'll put it here.)
 
 ### Procedure	
+#### Training Modules
+Participants will first complete two training modules designed to help them to interpret the key figure used in the experimental manipulation: a *locations* training module on whether the locations were U.S. states or islands, and a *graph comprehension* training module covering how to interpret each element of the graph depicting the case rates in each location. Participants will receive corrective feedback on all questions in these training sections. 
 
-Can quote directly from original article - just put the text in quotations and note that this was followed precisely.  Or, quote directly and just point out exceptions to what was described in the original article.
+#### Experimental Manipulation
+Participants will read the following vignette about a novel virus:
+
+"November 2024 -- In five regions of the world (Hawaii, United States; Hokkaido, Japan; Te Waipounamu, New Zealand; Oregon, United States; California, United States), there was a novel virus that began to spread. Leaders of the regions were unsure about what to do because this was a novel virus that had never been seen before. But, together, the leaders decided on a set of public policies, called Policy A. Hawaiian leaders chose to implement Policy A on Day 5 to see if it would reduce infections. The other four regions did not implement Policy A, waiting to see whether it worked in Hawaii." This will be followed by a multiple choice attention check asking which region was the only one to implement Policy A. 
+
+Participants then read the following vignette as they are randomly assigned to imagine being a politician who either strongly believes Policy A would be effective (*Motivated to Support* condition), or strongly believes Policy A would be ineffective (*Motivated to Reject* condition):
+
+"Imagine that you are a politician who really [believes/does not believe] that Policy A will work to reduce the spread of the virus. You have done a lot of research, and you strongly believe that Policy A will be [effective/ineffective]." 
+
+Next, participants will view a full five-location graph and describe the data in their own words. The graph is a figure that plots new virus cases over Days 0-10 for all five regions, with a vertical line at Day 5 marking the intervention. Hawaii's cases are shown to drop sharply right after Day 5, so there was strong temporal covariation between policy and decline in every condition. Oregon and California kept climbing after Day 5, implying the supporting counterfactual inference that Hawaii's cases would have continued to rise without the policy. Hokkaido and Te Waipounamu declined on their own after Day 5, implying the rejecting counterfactual inference that Hawaii's cases would have fallen even without the policy.
+
+The primary outcome is whether participants would use comparison cases to their advantage, such that they would choose to show supporting comparison cases implying the counterfactual that virus cases would have been worse in the Motivated to Support condition (i.e., Option B),
+but would show the rejecting comparison cases implying that the counterfactual that virus
+cases would have declined anyway in the Motivated to Reject condition (i.e., Option C). Participants will choose one of the four following graphs to present on the nightly news in support of their assigned position and provide an open-ended explanation for their choice: (a) Target only: Hawaii's trajectory alone (this option is included to assess whether participants prefer to include comparison cases when given the choice not to); (b) Target + Supporting Comparisons: Hawaii plus Oregon and California; (c) Target + Rejecting Comparisons: Hawaii plus Hokkaido and Te Waipounamu; and (d) Target + All Comparisons: all five regions. I will counterbalance whether the U.S. states or islands were causal by creating another set of graphs that swap the labels of Oregon and California with Hokkaido and Te Waipounamu. 
+
+Participants will complete four comprehension/manipulation checks throughout the task. 
+
+Beyond replicating the original study, I am also interested investigating how people evaluate evidence selected by others. I plan to present participants with a graph chosen by another politician who supports or opposes Policy A and ask them to infer the politician's support/opposition based on the evidence they selected. The order in which this and the main trial are presented would be counterbalanced. 
 
 ### Analysis Plan
+To be included in the analyses, participants will need to get all four comprehension/manipulation check questions correct. The exclusion criteria will be preregistered before data collection. 
 
-Can also quote directly, though it is less often spelled out effectively for an analysis strategy section.  The key is to report an analysis strategy that is as close to the original - data cleaning rules, data exclusion rules, covariates, etc. - as possible.  
+As the key analysis of interest, I will test whether participants selectively present comparisons consistent with their assigned position by running two sets of logistic regressions: one that predicts selecting the supporting comparison cases (Option B), and one that predicts selecting the rejecting comparison cases (Option C). However, if very few participants select certain graphs in some experimental conditions, logistic regression may not provide reliable estimates. If this is the case, I will use a Chi-square test to see whether choosing a particular option (e.g., Target + Rejecting Comparisons) vs. not (any other option) varies by condition.
 
-**Clarify key analysis of interest here**  You can also pre-specify additional analyses you plan to do.
+In addition, I will test whether the emphasized dimension (islands vs. U.S. states) predicts
+participants’ causal judgments and whether it interacts with experimental condition, as in the
+original study. 
 
 ### Differences from Original Study
+First, the original study recruited both college undergraduates and participants from Prolific, whereas I will recruit exclusively from a college undergraduate participant pool. As a result, my sample will may be less demographically diverse. However, the effect size with these participants is larger, and this would allow for a closer replication, as the students from the original study are also from UCSD. 
 
-Explicitly describe known differences in sample, setting, procedure, and analysis plan from original study.  The goal, of course, is to minimize those differences, but differences will inevitably occur.  Also, note whether such differences are anticipated to make a difference based on claims in the original article or subsequent published research on the conditions for obtaining the effect.
+Second, the original study was implemented in Qualtrics, whereas I will implement the task using jsPsych. I will use the authors’ publicly available materials and analysis code as a starting point and adapt everything to reproduce the original procedure as closely as possible, including the training modules, corrective feedback, and counterbalancing.
+
+Third, the original study presented the vignette through videos in which chunks of text were read aloud, while participants in my replication will read the text without accompanying narration. This  may affect attention or comprehension, but I do not anticipate that it will substantially change the primary effect of motivated evidence selection. 
+
+Although restricting recruitment to undergraduates and removing video narration may limit generalizability or introduce procedural differences, I will minimize deviations from the original paradigm wherever possible. Given the large effect reported in the original study, I expect the primary effect to be reasonably robust to these changes, but I do recognize that differences in the sample  and implementation could influence the magnitude of the observed effect. 
 
 ### Methods Addendum (Post Data Collection)
 
@@ -82,6 +93,8 @@ Data preparation following the analysis plan.
 ### Data Preparation
 
 #### Load Relevant Libraries and Functions
+library(tidyverse)
+library(lsr)
 
 #### Import data
 
