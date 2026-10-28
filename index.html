@@ -70,18 +70,16 @@ var params = new URLSearchParams(window.location.search);
     correct_recall: 'Believed that Policy A would NOT work.'
   };
 
-  // stimuli; NEED TO UPDATE THIS
+  // stimuli
   var S = {
-    map: 'training-map.png',
-    axes: 'training-axes.png',
-    cityAB: 'training-cityAB.png',
-    graph_check: 'check-graph-comprehension.png',
-    // full 5-region graph: US version = U.S. states rise, island version = islands rise
-    full: (version === 'US') ? 'full-USCausal.png' : 'full-IslandCausal.png',
+    map: (emphasis === 'US') ? 'USEmphasis-Map-Training.png' : 'IslandEmphasis-Map-Training.png',
+    axes: 'Axes-Training.png',
+    trends: 'Trends-Training.png',
+    graph_check: 'Graph-Comprehension.png',
     A: 'A-HawaiiOnly.png',
     B: (emphasis === 'US') ? 'USCausal-B-Support.png' : 'IslandCausal-B-Support.png',
     C: (emphasis === 'US') ? 'USCausal-C-NotSupport.png' : 'IslandCausal-C-NotSupport.png',
-    D: 'USCausal-D-AllCounterfactuals.png' // same all-regions graph in both versions
+    D: (emphasis === 'US') ? 'USCausal-D-AllCounterfactuals.png' : 'IslandCausal-D-AllCounterfactuals.png' 
   };
   var GRAPH_LABELS = { A: 'target_only', B: 'target_support', C: 'target_reject', D: 'target_all' };
 
@@ -210,7 +208,7 @@ var params = new URLSearchParams(window.location.search);
 // TRAINING MODULE 2: GRAPH COMPREHENSION
   timeline.push(info('<h3>Graph Training</h3><p>Next, you will learn how to read the line graphs used in this study.</p>'));
 
-  // axes
+  // axes training
   timeline = timeline.concat(quiz({
     id: 'axes_x', image: S.axes,
     preamble: '<p>Below are the axes of the graph you will reason about later. On the <b>x-axis</b> ' +
@@ -221,61 +219,62 @@ var params = new URLSearchParams(window.location.search);
   }));
   timeline = timeline.concat(quiz({
     id: 'axes_y', image: S.axes,
-    preamble: '<p>On the <b>y-axis</b> (vertical line) is the number of <i>new</i> virus cases on a given day. ' +
+    preamble: '<p>On the <b>y-axis</b> (vertical line) is the number of <i><b>new</b></i> virus cases on a given day. ' +
       'Much like the graphs of covid cases, <i>higher</i> numbers indicate a greater number of new cases, ' +
       'and <i>lower</i> numbers indicate a lower number of new cases.</p>',
     prompt: 'If Day 3 had a value of "200" and Day 4 had a value of "5000" this means that:',
-    options: ['The number of new cases is decreasing over time',
-      'The number of new cases is staying the same over time',
-      'The number of new cases is increasing over time'],
+    options: ['The number of new cases is <u>decreasing</u> over time',
+      'The number of new cases is <u>staying</u> the same over time',
+      'The number of new cases is <u>increasing</u> over time'],
     correct: 'The number of new cases is increasing over time'
   }));
 
-  // trend in data
-  var data_pre = '<p>On this graph, each <b>line</b> represents a specific region.</p>';
+  // purple vs orange line training
+  var data_pre = '<p>On this graph, each <b>line</b> will represent a specific region.</p>';
   var trend_options = ['The number of new virus cases in City A.', 'The number of new virus cases in City B.',
     'The number of new virus cases in City C.', 'The number of new virus cases in City D.'];
   timeline = timeline.concat(quiz({
-    id: 'data_purple', image: S.cityAB, preamble: data_pre,
+    id: 'data_purple', image: S.trends, preamble: data_pre,
     prompt: 'What does the <b>purple line</b> represent?',
     options: trend_options, correct: trend_options[0]
   }));
   timeline = timeline.concat(quiz({
-    id: 'data_orange', image: S.cityAB, preamble: data_pre,
+    id: 'data_orange', image: S.trends, preamble: data_pre,
     prompt: 'What does the <b>orange line</b> represent?',
     options: trend_options, correct: trend_options[1]
   }));
 
-  // policy intervention (solid vs dashed)
-  var policy_pre = '<p>If the line is <b>solid</b> (&mdash;), the region has <i>not yet</i> implemented any policy ' +
-    'to address the virus. If the line is <b>dashed</b> (- - -), the region has implemented a policy to address the virus.</p>';
+  // solid vs dashed line training
+  var policy_pre = '<p>If the line is <b>solid (&mdash;)</b>, the region <i><b>has not yet</b></i> implemented any policy ' +
+    'to address the virus. If the line is <b>dashed(- - -)</b>, the region <i><b>has</b></i> implemented a policy to address the virus.</p>';
   var day_options = ['Day 0', 'Day 2', 'Day 5', 'Never'];
   timeline = timeline.concat(quiz({
-    id: 'policy_A', image: S.cityAB, preamble: policy_pre,
+    id: 'policy_A', image: S.trends, preamble: policy_pre,
     prompt: 'Which day did City A implement a policy to address the virus?',
     options: day_options, correct: 'Day 5'
   }));
   timeline = timeline.concat(quiz({
-    id: 'policy_B', image: S.cityAB, preamble: policy_pre,
+    id: 'policy_B', image: S.trends, preamble: policy_pre,
     prompt: 'Which day did City B implement a policy to address the virus?',
     options: day_options, correct: 'Never'
   }));
 
-  // trends
+  // trends training
   var trend_options = ['Decreased over time', 'Stayed the same over time', 'Increased over time'];
   timeline = timeline.concat(quiz({
-    id: 'trend_A', image: S.cityAB,
+    id: 'trend_A', image: S.trends,
     prompt: 'In City A, the number of new virus cases generally:',
     options: trend_options, correct: 'Stayed the same over time'
   }));
   timeline = timeline.concat(quiz({
-    id: 'trend_B', image: S.cityAB,
+    id: 'trend_B', image: S.trends,
     prompt: 'In City B, the number of new virus cases generally:',
     options: trend_options, correct: 'Increased over time'
   }));
 
 
   // NEWS STORY + ATTENTION CHECK (with corrective feedback)
+  // FLAG: add instructions here: Below is text from the news story. 
   timeline.push(info(
     '<h3>News Story</h3>' +
     '<p>November 2024 &mdash; In five regions of the world (Hawaii, United States; Hokkaido, Japan; ' +
@@ -298,22 +297,14 @@ var params = new URLSearchParams(window.location.search);
     'reduce the spread of the virus. You have done a lot of research, and you strongly believe that ' +
     'Policy A will be <b>' + M.effective + '</b>.</p>'
   ));
+  // manipulation check
   timeline = timeline.concat(quiz({
     id: 'motivation_passage_check', phase: 'attention',
-    prompt: 'According to the passage you just read, you as a politician:',
-    options: ['Believe that Policy A will work.', 'Believe that Policy A will NOT work.',
-      'Are not sure whether Policy A will work or not.'],
+    prompt: 'As a memory check, you as a politician:',
+    options: ['Believed that Policy A will work.', 'Believed that Policy A will NOT work.',
+      'Were not sure whether Policy A will work or not.'],
     correct: function () { return M.correct_belief; }
   }));
-
-  // GRAPH OF ALL 5 REGIONS + DATA DESCRIPTION
-  timeline.push(text_question(
-    'data_description',
-    'Describe in 3 to 5 sentences the data that you see. Remember, Hawaii was the <b>only</b> location to ' +
-    'implement Policy A. All other locations did <b>not</b> implement Policy A.',
-    '<p>Now imagine that you received data from all 5 regions:</p>' + img(S.full, 850) +
-    '<p><i>Note.</i> Dashed line indicates that the region <b>implemented</b> Policy A.</p>'
-  ));
 
   // DV: DATA SELECTION
   var chosen = null; // letter of the graph the participant picks
@@ -343,6 +334,14 @@ var params = new URLSearchParams(window.location.search);
   };
   timeline.push(graph_selection);
 
+  // data description
+  timeline.push(text_question(
+  'data_description',
+  'Describe in 3 to 5 sentences the data that you see. Remember, Hawaii was the <b>only</b> location to ' +
+  'implement Policy A. All other locations did <b>not</b> implement Policy A.',
+  '<p>Now imagine that you received data from all 5 regions:</p>' + img(S.D, 850)
+));
+
   timeline.push(text_question(
     'convince_audience',
     'Now imagine that you as the politician are describing the graph you selected to the nightly news audience. ' +
@@ -351,7 +350,7 @@ var params = new URLSearchParams(window.location.search);
     '', 5
   ));
 
-  // justify the choice (new page showing the chosen graph)
+  // justify choice (new page showing chosen graph)
   var justify = text_question(
     'justify_choice',
     'Imagine that someone saw <b>all</b> of the data for <b>all</b> 5 cities, and asked you to explain why you chose ' +
@@ -365,16 +364,23 @@ var params = new URLSearchParams(window.location.search);
   timeline.push(justify);
 
   // COMPREHENSION / MANIPULATION CHECKS (no feedback)
-  timeline.push(info('<p>Please answer the following questions.</p>'));
+  timeline.push(info('<p>In these final few questions, you will share what you remember from teh story you just heard about.</p>'));
 
-  timeline = timeline.concat(quiz({
-    id: 'chk_intervention', phase: 'check', feedback: false,
-    prompt: 'Which of the following happened in Hawaii?',
-    options: ['Hawaii implemented Policy A ten days after all other regions did.',
-      'Hawaii was the only region with the Novel Virus.',
-      'Hawaii was the only region without the Novel Virus.',
-      'Hawaii was the only region to implement Policy A.'],
-    correct: 'Hawaii was the only region to implement Policy A.'
+    timeline = timeline.concat(quiz({
+      id: 'chk_intervention', phase: 'check', feedback: false,
+      prompt: 'Which of the following happened in Hawaii?',
+      options: ['Hawaii implemented Policy A ten days after all other regions did.',
+        'Hawaii was the only region with the Novel Virus.',
+        'Hawaii was the only region without the Novel Virus.',
+        'Hawaii was the only region to implement Policy A.'],
+      correct: 'Hawaii was the only region to implement Policy A.'
+    }));
+    timeline = timeline.concat(quiz({
+    id: 'chk_motivation', phase: 'check', feedback: false,
+    prompt: 'As a memory check, you as a politician:',
+    options: ['Believed that Policy A would work.', 'Believed that Policy A would NOT work.',
+      'Were not sure whether Policy A would work or not.'],
+    correct: function () { return M.correct_recall; }
   }));
   timeline = timeline.concat(quiz({
     id: 'chk_location_us', phase: 'check', feedback: false, multi: true, options: REGIONS,
@@ -396,13 +402,7 @@ var params = new URLSearchParams(window.location.search);
       'Pennsylvania implemented Policy A on Day 5.'],
     correct: 'Massachusetts implemented Policy A on Day 5.'
   }));
-  timeline = timeline.concat(quiz({
-    id: 'chk_motivation', phase: 'check', feedback: false,
-    prompt: 'As a memory check, you as a politician:',
-    options: ['Believed that Policy A would work.', 'Believed that Policy A would NOT work.',
-      'Were not sure whether Policy A would work or not.'],
-    correct: function () { return M.correct_recall; }
-  }));
+
 
 // GENERAL BELIEFS + DEMOGRAPHICS
   var mandates_slider = {
@@ -423,7 +423,7 @@ var params = new URLSearchParams(window.location.search);
 
   var demographics_gender = {
     type: jsPsychSurveyMultiChoice,
-    preamble: '<h3>About you</h3>',
+    preamble: '<p>This last part will ask you some basic demographic information</p>',
     questions: [
       {
         prompt: 'What is your gender?', name: 'gender', required: true,
