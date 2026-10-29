@@ -42,7 +42,7 @@
   // randomly assign participants to: 
   //   motivation: "support" or "reject"
   //   emphasis:    "US" or "Island" (which comparison set is the "supporting" one)
-  // assign server-side and pass in the URL, e.g. index.html?motivation=reject&version=Island
+  // assign server-side and pass in the URL, e.g. index.html?motivation=reject&emphasis=Island
 var params = new URLSearchParams(window.location.search);
   var motivation = params.get('motivation') ||
     jsPsych.randomization.sampleWithoutReplacement(['support', 'reject'], 1)[0];
@@ -421,34 +421,95 @@ var params = new URLSearchParams(window.location.search);
 
   timeline.push(text_question('mandates_why', 'Why do you think that?', '', 4));
 
-  var demographics_gender = {
-    type: jsPsychSurveyMultiChoice,
-    preamble: '<p>This last part will ask you some basic demographic information</p>',
+  // age, gender, race (open text)
+  var demographics_text = {
+    type: jsPsychSurveyText,
+    preamble: '<p>This last part will ask you some basic demographic information./p>',
     questions: [
-      {
-        prompt: 'What is your gender?', name: 'gender', required: true,
-        options: ['Woman', 'Man', 'Non-binary', 'Prefer to self-describe', 'Prefer not to say']
-      },
-      {
-        prompt: 'Where would you place yourself politically?', name: 'political_orientation', required: true,
-        options: ['Very liberal', 'Liberal', 'Slightly liberal', 'Moderate',
-          'Slightly conservative', 'Conservative', 'Very conservative']
-      }
+      { prompt: 'What is your age (in years)?', name: 'age', rows: 1, columns: 20, required: true },
+      { prompt: 'What gender do you identify as?', name: 'gender', rows: 1, columns: 40, required: true },
+      { prompt: 'What race(s) do you identify as?', name: 'race', rows: 1, columns: 40, required: true }
     ],
-    data: { phase: 'demographics' }
+    data: { phase: 'demographics', qid: 'age_gender_race' },
+    on_finish: function (data) {
+      data.age = data.response.age;
+      data.gender = data.response.gender;
+      data.race = data.response.race;
+    }
   };
-  timeline.push(demographics_1);
+  timeline.push(demographics_text);
 
-  var demographics_race = {
-    type: jsPsychSurveyMultiSelect,
+  // education
+  var education = {
+    type: jsPsychSurveyMultiChoice,
     questions: [{
-      prompt: 'What is your race/ethnicity? Select all that apply.', name: 'race_ethnicity', required: true,
-      options: ['American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino/a',
-        'Middle Eastern or North African', 'Native Hawaiian or Pacific Islander', 'White', 'Other', 'Prefer not to say']
+      prompt: 'What is your highest level of education?',
+      name: 'education',
+      required: true,
+      options: [
+        'Less than a high school diploma',
+        'High school diploma',
+        "Associate's degree",
+        "Bachelor's degree (B.A., B.S.)",
+        "Master's degree (M.A., M.S.)",
+        'Professional degree (M.D., Ph.D., etc.)',
+        'Prefer to self-describe:'
+      ]
     }],
-    data: { phase: 'demographics' }
+    data: { phase: 'demographics', qid: 'education' }
   };
-  timeline.push(demographics_2);
+  timeline.push(education);
+
+  // education: self-describe text box only shown if "Prefer to self-describe:" was chosen
+  var education_self_describe = {
+    timeline: [{
+      type: jsPsychSurveyText,
+      questions: [{ prompt: 'Prefer to self-describe:', name: 'education_self_describe', rows: 1, columns: 40, required: true }],
+      data: { phase: 'demographics', qid: 'education_self_describe' }
+    }],
+    conditional_function: function () {
+      var last = jsPsych.data.getLastTrialData().values()[0];
+      return last.response.education === 'Prefer to self-describe:';
+    }
+  };
+  timeline.push(education_self_describe);
+
+  // political orientation
+  var political = {
+    type: jsPsychSurveyMultiChoice,
+    questions: [{
+      prompt: 'What is your political orientation?',
+      name: 'political',
+      required: true,
+      options: [
+        'Extremely Liberal',
+        'Liberal',
+        'Slightly Liberal',
+        'Moderate/Middle of the Road',
+        'Slightly Conservative',
+        'Conservative',
+        'Extremely Conservative',
+        "Haven't thought about it much"
+      ]
+    }],
+    data: { phase: 'demographics', qid: 'political' }
+  };
+  timeline.push(political);
+
+  // household income
+  var income = {
+    type: jsPsychSurveyText,
+    questions: [{
+      prompt: 'What is the gross income of your household (to the nearest 1000; please write a <b>number</b> without the dollar sign or commas)?',
+      name: 'income', rows: 1, columns: 20, required: true
+    }],
+    data: { phase: 'demographics', qid: 'income' },
+    on_load: function () {
+      var box = document.querySelector('#input-0');
+      box.setAttribute('inputmode', 'numeric');
+      }
+  };
+  timeline.push(income);
 
   // start the experiment
   jsPsych.run(timeline);
