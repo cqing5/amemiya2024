@@ -375,7 +375,7 @@ timeline = timeline.concat(quiz({
   var graph_selection = {
     type: jsPsychHtmlButtonResponse,
     stimulus: '<p>While this is all the data, <b>you</b> get to decide <i><b>which</i></b> data is shown on the nightly news.</p>' +
-      '<p>Remember you are a politician who <b>really</b>' + M.believe + ' in Policy A. ' +
+      '<p>Remember you are a politician who <b>really</b> ' + M.believe + ' in Policy A. ' +
       'Which of the following graphs would you show on the nightly news to show that it <b>' + M.worked + '</b>?</p>',
     choices: ['A', 'B', 'C', 'D'],
     button_layout: 'grid',
@@ -420,7 +420,7 @@ timeline = timeline.concat(quiz({
   timeline.push(justify);
 
   // COMPREHENSION / MANIPULATION CHECKS (no feedback)
-  timeline.push(info('<p>In these final few questions, you will share what you remember from teh story you just heard about.</p>'));
+  timeline.push(info('<p>In these final few questions, you will share what you remember from the story you just heard about.</p>'));
 
     timeline = timeline.concat(quiz({
       id: 'chk_intervention', phase: 'check', feedback: false,
