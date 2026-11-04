@@ -13,6 +13,12 @@
   <!-- DataPipe extension, which saves our data -->
   <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
   <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <style>
+    .jspsych-content {
+      max-width: 800px;
+      padding: 0 40px;
+    }
+  </style>
 </head>
 <body></body>
 <script>
@@ -20,7 +26,13 @@
   // initialize jsPsych
   var jsPsych = initJsPsych({
     on_finish: function () {
+      // TO DO: REPLACE displayData() WITH A FINISHING MESSAGE / DEBRIEF
       jsPsych.data.displayData();
+      // document.body.innerHTML =
+      //   '<div>' +
+      //   '<h2>Thank you!</h2>' +
+      //   '<p>You have completed the study. Your responses have been recorded, and you may now close this window.</p>' +
+      //   '</div>';
     },
     // send the data to DataPipe
     extensions: [
@@ -55,17 +67,19 @@ var params = new URLSearchParams(window.location.search);
     emphasis: emphasis
   });
 
-  // condition-dependent wording (to use later in the vignettes/questions)
-  var M = (motivation === 'support') ? {
+  // condition-dependent wording (to use in the vignettes/questions)
+ var M = (motivation === 'support') ? {
     believe: 'believes',
     effective: 'effective',
     worked: 'worked',
+    will_html: 'will',
     correct_belief: 'Believe that Policy A will work.',
     correct_recall: 'Believed that Policy A would work.'
   } : {
     believe: 'does not believe',
     effective: 'ineffective',
     worked: 'did not work',
+    will_html: 'will <b>not</b>',
     correct_belief: 'Believe that Policy A will NOT work.',
     correct_recall: 'Believed that Policy A would NOT work.'
   };
@@ -106,44 +120,52 @@ var params = new URLSearchParams(window.location.search);
     };
   }
 
-  // multiple-choice (or select-all) question, followed by corrective feedback if the answer was wrong. `correct` can be a value or a function
-  // (for answers that depend on condition). Returns an array of trials.
-  function quiz(opts) {
+  // multiple-choice / or select-all question(s) on one page, followed by feedback
+  // use opts.id/prompt/options/correct for a single question, or opts.items (array of {id, prompt, options, correct}) to put several single-choice questions on one page
+  // opts.right / opts.wrong = feedback HTML shown after a correct / incorrect answer
+    function quiz(opts) {
     var multi = opts.multi || false;
     var phase = opts.phase || 'training';
     var give_feedback = (opts.feedback === undefined) ? true : opts.feedback;
-    function answer() {
-      return (typeof opts.correct === 'function') ? opts.correct() : opts.correct;
+    var items = opts.items || [{ id: opts.id, prompt: opts.prompt, options: opts.options, correct: opts.correct }];
+
+    function answer(item) {
+      return (typeof item.correct === 'function') ? item.correct() : item.correct;
+    }
+    function text(x) {
+      return (typeof x === 'function') ? x() : x;
     }
 
     var question = {
       type: multi ? jsPsychSurveyMultiSelect : jsPsychSurveyMultiChoice,
       preamble: (opts.image ? img(opts.image, 700) : '') + (opts.preamble || ''),
-      questions: [{ prompt: opts.prompt, name: opts.id, options: opts.options, required: true }],
+      questions: items.map(function (item) {
+        return { prompt: item.prompt, name: item.id, options: item.options, required: true };
+      }),
       data: { phase: phase, qid: opts.id },
       on_finish: function (data) {
-        var resp = data.response[opts.id];
-        data.correct_answer = JSON.stringify(answer());
-        data.correct = multi ? sameSet(resp, answer()) : (resp === answer());
+        var all_correct = true;
+        items.forEach(function (item) {
+          var resp = data.response[item.id];
+          var ok = multi ? sameSet(resp, answer(item)) : (resp === answer(item));
+          if (items.length > 1) { data['correct_' + item.id] = ok; }
+          if (!ok) { all_correct = false; }
+        });
+        data.correct_answer = JSON.stringify(items.map(answer));
+        data.correct = all_correct;
       }
     };
     if (!give_feedback) { return [question]; }
 
+    // feedback screen, shown after every question (different text if right vs. wrong)
     var feedback = {
-      timeline: [{
-        type: jsPsychHtmlButtonResponse,
-        stimulus: function () {
-          var a = answer();
-          return '<p style="color:#b00020; font-weight:bold;">That is not correct.</p>' +
-            '<p>The correct answer is: <b>' + (multi ? a.join(', ') : a) + '</b></p>';
-        },
-        choices: ['Continue'],
-        data: { phase: 'feedback', qid: opts.id }
-      }],
-      // only show feedback if the previous answer was wrong
-      conditional_function: function () {
-        return !jsPsych.data.getLastTrialData().values()[0].correct;
-      }
+      type: jsPsychHtmlButtonResponse,
+      stimulus: function () {
+        var was_correct = jsPsych.data.getLastTrialData().values()[0].correct;
+        return '<div style="text-align: left;">' + text(was_correct ? opts.right : opts.wrong) + '</div>';
+      },
+      choices: ['Continue'],
+      data: { phase: 'feedback', qid: opts.id }
     };
     return [question, feedback];
   }
@@ -161,7 +183,7 @@ var params = new URLSearchParams(window.location.search);
   // create timeline
   var timeline = [];
 
- // PRELOAD IMAGES
+ // preload images
   var preload = {
     type: jsPsychPreload,
     images: [
@@ -170,23 +192,44 @@ var params = new URLSearchParams(window.location.search);
   };
   timeline.push(preload);
 
-  // WELCOME MESSAGE
+  // WELCOME MESSAGE + CONSENT
   var welcome = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<h2>Welcome!</h2>' +
-      '<p>In this study you will complete a short training, read a news story about a novel virus, ' +
-      'and answer some questions about it. Please read carefully; you will receive feedback on the training questions.</p>',
-    choices: ['Begin']
+    stimulus: '<div style="text-align: left;">' +
+      '<h2>Welcome!</h2>' +
+      '<p>You are being invited to participate in a research study titled “Reproducibility of Psychological Science and Instruction.” This study is being done by Dr. Bria Long from UC San Diego and associated graduate students in Experimental Methods course. You were selected to participate in this study because you are an adult in the U.S. and have been a represented population in previous psychology studies. <br><br>' + 
+      
+      'The purpose of this study is to better understand how well previously published studies in the psychological field replicate online and with different populations. Your participation in this research should last approximately 5-30 minutes  If you agree to take part in this study, you may be asked to view a set of stimuli, including pictures, sounds, written text, or videos and then giving some responses via key-presses, verbally, or with paper-and-pencil. We may also observe your choices or preferences among an array of stimuli.  These stimuli will be taken directly from or closely adapted from studies that already exist in the published psychological literature. Stimuli will include, e.g., pictures of objects and human faces, audio and video clips, short text passages, etc. None of the stimuli will be disturbing, threatening, or offensive. The online and in-person experiments described in this protocol will take no more than 30 minutes. An example game you might play would be to click on an image on the screen that matches a word you hear being said out loud. Your total expected time commitment for this study is between 5-30 minutes, and is specified in the study description.<br><br>' +
+
+      'Your participation in this study is completely voluntary and you can withdraw at any time. Choosing not to participate or withdrawing will result in no penalty or loss of benefits to which you are entitled. You are free to skip any question that you choose.<br><br>' +
+
+      'We will not be asking for any personally identifying information, and we will handle responses as confidentially as possible. Your SONA or Prolific IDs will never be tied to your responses on this survey. However, we cannot guarantee the confidentiality of information transmitted over the Internet. To minimize this risk, data containing anything that might be personally identifiable (e.g. Prolific IDs or IP addresses) will be encrypted on transfer and storage and will only be accessible to qualified lab personnel. We will be keeping data collected as part of this experiment indefinitely. This anonymized data (containing neither Prolific IDs nor IP addresses) may be shared with the scientific community or with other participants to be used as stimuli in future studies.<br><br>' +
+
+      'If you have questions about this project or if you have a research-related problem, you may contact the researcher(s),  Dr. Bria Long, brlong@ucsd.edu. If you have any questions concerning your rights as a research subject, you may contact the UC San Diego Office of IRB Administration at irb@ucsd.edu or 858-246-4777.<br><br>' +
+
+      'By participating in this research you are indicating that you are at least 18 years old, have read this consent form, and agree to participate in this research study. Please keep this consent form for your records.</p>' + 
+      '</div>',
+    choices: ['I agree to participate in this research study.']
   };
   timeline.push(welcome);
 
+ var intro = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: 
+      '<p>In this study you will complete a short training, read a news story about a novel virus, ' +
+      'and answer some questions about it. Please read carefully; you will receive feedback on the training questions.</p>',
+    choices: ['Next']
+  };
+  timeline.push(intro);
+
 // TRAINING MODULE 1: LOCATION (both U.S. states and islands)
   var REGIONS = ['Hawaii', 'Oregon', 'California', 'Hokkaido', 'Te Waipounamu'];
-
+  
   timeline.push(info(
     '<h3>Location Training</h3>' +
     '<p>There are 5 regions in the scenario you will read about:</p>' +
-    '<ol><li>Hawaii, United States</li><li>Oregon, United States</li><li>California, United States</li>' +
+    '<ol style="text-align: left;">'+
+    '<li>Hawaii, United States</li><li>Oregon, United States</li><li>California, United States</li>' +
     '<li>Hokkaido, Japan</li><li>Te Waipounamu, New Zealand</li></ol>' +
     '<p>Below is a map that marks the locations of the 5 regions:</p>' + img(S.map, 800)
   ));
@@ -195,13 +238,17 @@ var params = new URLSearchParams(window.location.search);
     id: 'loc_train_us', multi: true, options: REGIONS, image: S.map,
     prompt: 'Some of these regions are <b>one of the 50 states of the United States</b>. ' +
       'Which regions are <b>one of the 50 states of the United States</b>? Mark <i>all</i> that apply:',
-    correct: ['Hawaii', 'Oregon', 'California']
+    correct: ['Hawaii', 'Oregon', 'California'],
+    right: 'That is <b>correct</b>!<br><br>The regions that are <b>states in the United States</b> are: Hawaii, Oregon, and California.',
+    wrong: '<b>Actually</b>, the regions that are <b>states in the United States</b> are: Hawaii, Oregon, and California.',
   }));
   timeline = timeline.concat(quiz({
     id: 'loc_train_island', multi: true, options: REGIONS, image: S.map,
-    prompt: 'Some of these regions are <b>located on an island</b>. ' +
+    prompt: 'Here is the map again that marks the locations of the 5 regions. Some of these regions are <b>located on an island</b>. ' +
       'Which regions are <b>located on an island</b>? Mark <i>all</i> that apply:',
-    correct: ['Hawaii', 'Hokkaido', 'Te Waipounamu']
+    correct: ['Hawaii', 'Hokkaido', 'Te Waipounamu'],
+    right: 'That is <b>correct</b>!<br><br>The regions that are <b>islands</b> are: Hawaii, Hokkaido, and Te Waipounamu.',
+    wrong: '<b>Actually</b>, the regions that are <b>islands</b> are: Hawaii, Hokkaido, and Te Waipounamu.'
   }));
 
  
@@ -215,9 +262,12 @@ var params = new URLSearchParams(window.location.search);
       '(horizontal line) is the number of days since the first novel virus cases.</p>',
     prompt: 'If Day 0 was December 31, what is the date of Day 5?',
     options: ['August 7', 'November 4', 'February 17', 'January 5'],
-    correct: 'January 5'
+    correct: 'January 5',
+    right: 'That is <b>correct</b>!<br><br>If Day 0 was December 31, then Day 5 is <b>January 5</b>.',
+    wrong: '<b>Actually</b>, if Day 0 was December 31, then Day 5 is <b>January 5</b>.'
   }));
-  timeline = timeline.concat(quiz({
+
+timeline = timeline.concat(quiz({
     id: 'axes_y', image: S.axes,
     preamble: '<p>On the <b>y-axis</b> (vertical line) is the number of <i><b>new</b></i> virus cases on a given day. ' +
       'Much like the graphs of covid cases, <i>higher</i> numbers indicate a greater number of new cases, ' +
@@ -226,57 +276,56 @@ var params = new URLSearchParams(window.location.search);
     options: ['The number of new cases is <u>decreasing</u> over time',
       'The number of new cases is <u>staying</u> the same over time',
       'The number of new cases is <u>increasing</u> over time'],
-    correct: 'The number of new cases is increasing over time'
+    correct: 'The number of new cases is <u>increasing</u> over time',
+    right: 'That is <b>correct</b>!<br><br>If Day 3 had a value of "200" and Day 4 had a value of "5000" this means that the number of new cases is <b>increasing</b> over time.',
+    wrong: '<b>Actually</b>, if Day 3 had a value of "200" and Day 4 had a value of "5000" this means that the number of new cases is <b>increasing</b> over time.'
   }));
 
   // purple vs orange line training
   var data_pre = '<p>On this graph, each <b>line</b> will represent a specific region.</p>';
-  var trend_options = ['The number of new virus cases in City A.', 'The number of new virus cases in City B.',
+  var city_options = ['The number of new virus cases in City A.', 'The number of new virus cases in City B.',
     'The number of new virus cases in City C.', 'The number of new virus cases in City D.'];
   timeline = timeline.concat(quiz({
-    id: 'data_purple', image: S.trends, preamble: data_pre,
-    prompt: 'What does the <b>purple line</b> represent?',
-    options: trend_options, correct: trend_options[0]
-  }));
-  timeline = timeline.concat(quiz({
-    id: 'data_orange', image: S.trends, preamble: data_pre,
-    prompt: 'What does the <b>orange line</b> represent?',
-    options: trend_options, correct: trend_options[1]
+    id: 'data_lines', image: S.trends, preamble: data_pre,
+    items: [
+      { id: 'data_purple', prompt: 'What does the <b>purple line</b> represent?', options: city_options, correct: city_options[0] },
+      { id: 'data_orange', prompt: 'What does the <b>orange line</b> represent?', options: city_options, correct: city_options[1] }
+    ],
+    right: 'That is <b>correct</b>!<br><br>The <b>purple line</b> represents City A\u2019s novel virus cases and the <b>orange line</b> represents City B\u2019s novel virus cases.',
+    wrong: '<b>Actually</b>, the <b>purple line</b> represents City A\u2019s novel virus cases and the <b>orange line</b> represents City B\u2019s novel virus cases.'
   }));
 
   // solid vs dashed line training
-  var policy_pre = '<p>If the line is <b>solid (&mdash;)</b>, the region <i><b>has not yet</b></i> implemented any policy ' +
-    'to address the virus. If the line is <b>dashed(- - -)</b>, the region <i><b>has</b></i> implemented a policy to address the virus.</p>';
+ var policy_pre = '<p>If the line is <b>solid (&mdash;)</b>, the region <i><b>has not yet</b></i> implemented any policy ' +
+    'to address the virus. If the line is <b>dashed (- - -)</b>, the region <i><b>has</b></i> implemented a policy to address the virus.</p>';
   var day_options = ['Day 0', 'Day 2', 'Day 5', 'Never'];
   timeline = timeline.concat(quiz({
-    id: 'policy_A', image: S.trends, preamble: policy_pre,
-    prompt: 'Which day did City A implement a policy to address the virus?',
-    options: day_options, correct: 'Day 5'
-  }));
-  timeline = timeline.concat(quiz({
-    id: 'policy_B', image: S.trends, preamble: policy_pre,
-    prompt: 'Which day did City B implement a policy to address the virus?',
-    options: day_options, correct: 'Never'
+    id: 'policy_lines', image: S.trends, preamble: policy_pre,
+    items: [
+      { id: 'policy_A', prompt: 'Which day did City A implement a policy to address the virus?', options: day_options, correct: 'Day 5' },
+      { id: 'policy_B', prompt: 'Which day did City B implement a policy to address the virus?', options: day_options, correct: 'Never' }
+    ],
+    right: 'That is <b>correct</b>!<br><br><b>City A</b> implemented a policy on <b>Day 5</b>, and <b>City B never</b> implemented a policy.',
+    wrong: '<b>Actually</b>, <b>City A</b> implemented a policy on <b>Day 5</b>, and <b>City B never</b> implemented a policy.'
   }));
 
+
   // trends training
-  var trend_options = ['Decreased over time', 'Stayed the same over time', 'Increased over time'];
+   var trend_options = ['Decreased over time', 'Stayed the same over time', 'Increased over time'];
   timeline = timeline.concat(quiz({
-    id: 'trend_A', image: S.trends,
-    prompt: 'In City A, the number of new virus cases generally:',
-    options: trend_options, correct: 'Stayed the same over time'
-  }));
-  timeline = timeline.concat(quiz({
-    id: 'trend_B', image: S.trends,
-    prompt: 'In City B, the number of new virus cases generally:',
-    options: trend_options, correct: 'Increased over time'
+    id: 'trend_lines', image: S.trends,
+    items: [
+      { id: 'trend_A', prompt: 'In City A, the number of new virus cases generally:', options: trend_options, correct: 'Stayed the same over time' },
+      { id: 'trend_B', prompt: 'In City B, the number of new virus cases generally:', options: trend_options, correct: 'Increased over time' }
+    ],
+    right: 'That is <b>correct</b>!<br><br><b>City A\u2019s</b> cases <b>stayed the same</b> over time, and <b>City B\u2019s</b> cases <b>increased</b> over time.',
+    wrong: '<b>Actually</b>, <b>City A\u2019s</b> cases <b>stayed the same</b> over time, and <b>City B\u2019s</b> cases <b>increased</b> over time.'
   }));
 
 
   // NEWS STORY + ATTENTION CHECK (with corrective feedback)
-  // FLAG: add instructions here: Below is text from the news story. 
   timeline.push(info(
-    '<h3>News Story</h3>' +
+    '<p>Now, please read the news story below:</p>' +
     '<p>November 2024 &mdash; In five regions of the world (Hawaii, United States; Hokkaido, Japan; ' +
     'Te Waipounamu, New Zealand; Oregon, United States; California, United States), there was a novel virus ' +
     'that began to spread. Leaders of the regions were unsure about what to do because this was a novel virus ' +
@@ -284,35 +333,49 @@ var params = new URLSearchParams(window.location.search);
     'Hawaiian leaders chose to implement Policy A on Day 5 to see if it would reduce infections. ' +
     'The other four regions did not implement Policy A, waiting to see whether it worked in Hawaii.</p>'
   ));
+
   timeline = timeline.concat(quiz({
     id: 'story_check_only_region', phase: 'attention',
     prompt: 'According to the story you just read, which was the only region to implement Policy A?',
     options: ['Hawaii, United States', 'Te Waipounamu, New Zealand', 'Oregon, United States', 'All 5 regions'],
-    correct: 'Hawaii, United States'
+    correct: 'Hawaii, United States',
+    right: 'That is <b>correct</b>! Hawaii implemented Policy A.',
+    wrong: '<b>Actually</b>, Hawaii implemented Policy A.'
   }));
 
   // MOTIVATED REASONING MANIPULATION
   timeline.push(info(
-    '<p>Imagine that you are a politician who really <b>' + M.believe + '</b> that Policy A will work to ' +
+    '<p>Imagine that you are a politician who <b>really</b> ' + M.believe + ' that Policy A will work to ' +
     'reduce the spread of the virus. You have done a lot of research, and you strongly believe that ' +
     'Policy A will be <b>' + M.effective + '</b>.</p>'
   ));
+
   // manipulation check
-  timeline = timeline.concat(quiz({
+ timeline = timeline.concat(quiz({
     id: 'motivation_passage_check', phase: 'attention',
-    prompt: 'As a memory check, you as a politician:',
-    options: ['Believed that Policy A will work.', 'Believed that Policy A will NOT work.',
-      'Were not sure whether Policy A will work or not.'],
-    correct: function () { return M.correct_belief; }
+    prompt: 'According to the passage above, you as a politician:',
+    options: ['Believe that Policy A will work.', 'Believe that Policy A will NOT work.',
+      'Are not sure whether Policy A will work or not.'],
+    correct: function () { return M.correct_belief; },
+    right: function () { return 'That is <b>correct</b>! As a politician, you believe that Policy A <b>' + M.will_html + '</b> work.'; },
+    wrong: function () { return '<b>Actually</b>, as a politician, you believe that Policy A <b>' + M.will_html + '</b> work.'; }
   }));
+
+  // data description
+  timeline.push(text_question(
+  'data_description',
+  '<p>Now imagine that you received data from all 5 regions:</p>' +
+  'Describe in 3 to 5 sentences the data that you see. Remember, Hawaii was the <b>only</b> location to ' +
+  'implement Policy A. All other locations did <b>not</b> implement Policy A.' + img(S.D, 850)
+));
 
   // DV: DATA SELECTION
   var chosen = null; // letter of the graph the participant picks
 
   var graph_selection = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>While this is all the data, <b>you</b> get to decide <i>which</i> data is shown on the nightly news.</p>' +
-      '<p>Remember you are a politician who really <b>' + M.believe + '</b> in Policy A. ' +
+    stimulus: '<p>While this is all the data, <b>you</b> get to decide <i><b>which</i></b> data is shown on the nightly news.</p>' +
+      '<p>Remember you are a politician who <b>really</b>' + M.believe + ' in Policy A. ' +
       'Which of the following graphs would you show on the nightly news to show that it <b>' + M.worked + '</b>?</p>',
     choices: ['A', 'B', 'C', 'D'],
     button_layout: 'grid',
@@ -334,14 +397,7 @@ var params = new URLSearchParams(window.location.search);
   };
   timeline.push(graph_selection);
 
-  // data description
-  timeline.push(text_question(
-  'data_description',
-  'Describe in 3 to 5 sentences the data that you see. Remember, Hawaii was the <b>only</b> location to ' +
-  'implement Policy A. All other locations did <b>not</b> implement Policy A.',
-  '<p>Now imagine that you received data from all 5 regions:</p>' + img(S.D, 850)
-));
-
+  // open-ended justification
   timeline.push(text_question(
     'convince_audience',
     'Now imagine that you as the politician are describing the graph you selected to the nightly news audience. ' +
@@ -354,7 +410,7 @@ var params = new URLSearchParams(window.location.search);
   var justify = text_question(
     'justify_choice',
     'Imagine that someone saw <b>all</b> of the data for <b>all</b> 5 cities, and asked you to explain why you chose ' +
-    'to show <i>this</i> particular graph. What would you say to justify your decision? Please write 2 to 3 sentences.',
+    'to show <i><b>this</b></i> particular graph. What would you say to justify your decision? Please write 2 to 3 sentences.',
     '', 5
   );
   // preamble is a function so it is evaluated after the participant has chosen a graph
@@ -371,7 +427,7 @@ var params = new URLSearchParams(window.location.search);
       prompt: 'Which of the following happened in Hawaii?',
       options: ['Hawaii implemented Policy A ten days after all other regions did.',
         'Hawaii was the only region with the Novel Virus.',
-        'Hawaii was the only region without the Novel Virus.',
+        'Hawaii was the only region <b>without</b> the Novel Virus.',
         'Hawaii was the only region to implement Policy A.'],
       correct: 'Hawaii was the only region to implement Policy A.'
     }));
@@ -383,16 +439,6 @@ var params = new URLSearchParams(window.location.search);
     correct: function () { return M.correct_recall; }
   }));
   timeline = timeline.concat(quiz({
-    id: 'chk_location_us', phase: 'check', feedback: false, multi: true, options: REGIONS,
-    prompt: 'Which regions are <b>not</b> states in the United States? Check all that apply.',
-    correct: ['Hokkaido', 'Te Waipounamu']
-  }));
-  timeline = timeline.concat(quiz({
-    id: 'chk_location_island', phase: 'check', feedback: false, multi: true, options: REGIONS,
-    prompt: 'Which regions are mainland regions (i.e., they are <b>not</b> an island)? Check all that apply.',
-    correct: ['California', 'Oregon']
-  }));
-  timeline = timeline.concat(quiz({
     id: 'chk_graph', phase: 'check', feedback: false, image: S.graph_check,
     preamble: '<p>Based on the graph below, mark the <b>true</b> statement.</p>',
     prompt: 'Which statement is true?',
@@ -402,7 +448,16 @@ var params = new URLSearchParams(window.location.search);
       'Pennsylvania implemented Policy A on Day 5.'],
     correct: 'Massachusetts implemented Policy A on Day 5.'
   }));
-
+  timeline = timeline.concat(quiz({
+    id: 'chk_location_us', phase: 'check', feedback: false, multi: true, options: REGIONS,
+    prompt: 'Which regions are <b>not</b> states in the United States? Check all that apply.',
+    correct: ['Hokkaido', 'Te Waipounamu']
+  }));
+  timeline = timeline.concat(quiz({
+    id: 'chk_location_island', phase: 'check', feedback: false, multi: true, options: REGIONS,
+    prompt: 'Which regions are mainland regions (i.e., they are <b>not</b> an island)? Check all that apply.',
+    correct: ['California', 'Oregon']
+  }));
 
 // GENERAL BELIEFS + DEMOGRAPHICS
   var mandates_slider = {
