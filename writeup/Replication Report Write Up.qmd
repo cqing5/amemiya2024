@@ -22,7 +22,15 @@ See the project repository [here](https://github.com/cqing5/amemiya2024) and the
 ## Methods
 
 ### Power Analysis
-I haven't run the power analysis yet, but n = 120 in the original study was based on a power analysis in G*Power that indicated 61 participants would be needed to detect a medium to large effect size (w = .40) of study condition with a power of .80 and alpha level of .05. The authors roughly doubled this sample size to allow for exploratory analyses. 
+The power analysis below indicates that 68 participants would be needed to detect a medium to large effect size (w = .40) with a power of .80 and alpha level of .05. Note that the authors conducted a power analysis in G*Power that indicated they would need 61 participants to detect the same effect, and that they roughly doubled their sample size to 120 to allow for exploratory analyses. 
+
+```{r include=F}
+library(pwr)
+
+power_analysis <- pwr.chisq.test(w = 0.40, df = 3, sig.level = 0.05, power = 0.80)
+power_analysis$N
+
+```
 
 ### Planned Sample
 Participants will consist of undergraduate students attending a large, public university in the West Coast region of the United States. To account for participant attrition or exclusion due to failed comprehension checks, I will recruit approximately 20% more participants than the target analyzable sample to account for exclusions, using the exclusion rate reported in the original study (approximately 14%) as an estimate. As a result, I aim to recruit 144 participants from UCSD SONA. 
@@ -56,7 +64,7 @@ Beyond replicating the original study, I am also interested investigating how pe
 ### Analysis Plan
 To be included in the analyses, participants will need to get all four comprehension/manipulation check questions correct. The exclusion criteria will be preregistered before data collection. 
 
-As the key analysis of interest, I will test whether participants selectively present comparisons consistent with their assigned position by running two sets of logistic regressions: one that predicts selecting the supporting comparison cases (Option B), and one that predicts selecting the rejecting comparison cases (Option C). However, if very few participants select certain graphs in some experimental conditions, logistic regression may not provide reliable estimates. If this is the case, I will use a Chi-square test to see whether choosing a particular option (e.g., Target + Rejecting Comparisons) vs. not (any other option) varies by condition.
+As the key analysis of interest, I will conduct a chi-square test of independence on a 2 (motivation: Support vs. Reject) × 4 (data selection: Target Only, Target + Supporting, Target + Rejecting, Target + All) contingency table.
 
 In addition, I will test whether the emphasized dimension (islands vs. U.S. states) predicts
 participants’ causal judgments and whether it interacts with experimental condition, as in the
