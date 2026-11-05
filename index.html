@@ -27,12 +27,11 @@
   var jsPsych = initJsPsych({
     on_finish: function () {
       // TO DO: REPLACE displayData() WITH A FINISHING MESSAGE / DEBRIEF
-      jsPsych.data.displayData();
-      // document.body.innerHTML =
-      //   '<div>' +
-      //   '<h2>Thank you!</h2>' +
-      //   '<p>You have completed the study. Your responses have been recorded, and you may now close this window.</p>' +
-      //   '</div>';
+      document.body.innerHTML =
+        '<div>' +
+        '<h2>Thank you!</h2>' +
+        '<p>You have completed the study. Your responses have been recorded, and you may now close this window.</p>' +
+        '</div>';
     },
     // send the data to DataPipe
     extensions: [
