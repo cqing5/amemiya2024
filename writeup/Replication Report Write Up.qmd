@@ -57,7 +57,7 @@ The primary outcome is whether participants would use comparison cases to their 
 but would show the rejecting comparison cases implying that the counterfactual that virus
 cases would have declined anyway in the Motivated to Reject condition (i.e., Option C). Participants will choose one of the four following graphs to present on the nightly news in support of their assigned position and provide an open-ended explanation for their choice: (a) Target only: Hawaii's trajectory alone (this option is included to assess whether participants prefer to include comparison cases when given the choice not to); (b) Target + Supporting Comparisons: Hawaii plus Oregon and California; (c) Target + Rejecting Comparisons: Hawaii plus Hokkaido and Te Waipounamu; and (d) Target + All Comparisons: all five regions. I will counterbalance whether the U.S. states or islands were causal by creating another set of graphs that swap the labels of Oregon and California with Hokkaido and Te Waipounamu. 
 
-Participants will complete four comprehension/manipulation checks throughout the task. 
+Participants will complete five comprehension/manipulation checks throughout the task. 
 
 Beyond replicating the original study, I am also interested investigating how people evaluate evidence selected by others. I plan to present participants with a graph chosen by another politician who supports or opposes Policy A and ask them to infer the politician's support/opposition based on the evidence they selected. The order in which this and the main trial are presented would be counterbalanced. 
 
@@ -95,25 +95,77 @@ You can comment this section out prior to final report with data collection.
 
 ### Data preparation
 
-Data preparation following the analysis plan.
+Exclude participants who do not get all of the comprehension checks correct. 
 	
 ```{r include=F}
 ### Data Preparation
+files <- list.files("/Users/caqing/Documents/GitHub/amemiya2024/data/self-pilot", full.names = TRUE)
 
 #### Load Relevant Libraries and Functions
 library(tidyverse)
 library(lsr)
 
 #### Import data
+raw_data <- map_dfr(
+  files,
+  ~ read_csv(.x, col_types = cols(.default = "c"), show_col_types = FALSE) %>%
+      mutate(source_file = basename(.x))
+)
 
-#### Data exclusion / filtering
+# score attention checks (5 total)
+# `correct` is written as "true"/"false", so convert  to logical
+chk_summary <- raw_data %>%
+  filter(phase == "check") %>%
+  mutate(correct = tolower(correct) == "true") %>%
+  group_by(source_file, subject_id) %>%
+  summarise(
+    n_checks  = n(),
+    n_correct = sum(correct, na.rm = TRUE),
+    .groups   = "drop"
+  ) %>%
+  mutate(passed_all_chks = n_correct == 5)
 
-#### Prepare data for analysis - create columns etc.
+# pull out the DV and condition (one row per participant)
+dv <- raw_data %>%
+  filter(qid == "graph_selection") %>%
+  transmute(
+    source_file, subject_id,
+    motivation   = factor(motivation, levels = c("support", "reject")),
+    emphasis,
+    choice_letter,
+    choice_label
+    # dv_rt_ms     = as.numeric(rt)
+  )
+
+# combine + apply exclusions
+# start from every participant who appears in any file, so anyone who quit before the checks (no check rows) counts as failing
+all_participants <- raw_data %>% distinct(source_file, subject_id)
+
+data_for_analysis <- all_participants %>%
+  left_join(chk_summary, by = c("source_file", "subject_id")) %>%
+  left_join(dv,               by = c("source_file", "subject_id")) %>%
+  mutate(passed_all_chks = replace_na(passed_all_chks, FALSE)) %>%
+  filter(passed_all_chks, !is.na(choice_label)) %>%
+  mutate(choice_label = factor(choice_label))
+
+cat("Participants retained:", nrow(data_for_analysis), "\n")
+
 ```
 
 ### Confirmatory analysis
 
-The analyses as specified in the analysis plan.  
+```{r include=F}
+# 2 (motivation) x 4 (data selection) contingency table
+tab <- table(data_for_analysis$motivation, data_for_analysis$choice_label)
+
+print(chisq.test(tab))
+
+# effect size
+cramersV(tab)
+
+# percentages by condition
+round(prop.table(tab, margin = 1) * 100, 1)
+```
 
 *Side-by-side graph with original graph is ideal here*
 
