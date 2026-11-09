@@ -29,7 +29,7 @@
   // initialize jsPsych
   var jsPsych = initJsPsych({
     on_finish: function () {
-      // TO DO: REPLACE displayData() WITH A FINISHING MESSAGE / DEBRIEF
+      // TO DO: add debrief
       document.body.innerHTML =
         '<div>' +
         '<h2>Thank you!</h2>' +
@@ -215,28 +215,29 @@ var params = new URLSearchParams(window.location.search);
   };
   timeline.push(welcome);
 
-var participant_id = {
-  type: jsPsychSurveyText,
-  preamble: '<p><b>Please enter your SONA participant ID below.</b></p>',
-  questions: [
-    {
-      prompt: 'SONA ID:',
-      name: 'sona_id',
-      required: true,
-      placeholder: 'Enter your ID',
-      columns: 30
-    }
-  ],
-  button_label: 'Continue',
-  data: { phase: 'sona_id', qid: 'sona_id' },
-  on_finish: function (data) {
-    var pid = data.response.sona_id.trim();
-    data.sona_id = pid;
-    // attach the ID to every subsequent row of data
-    jsPsych.data.addProperties({ sona_id: pid });
-  }
-};
-timeline.push(participant_id_trial);
+// leave out for now while testing
+// var participant_id = {
+//   type: jsPsychSurveyText,
+//   preamble: '<p><b>Please enter your SONA participant ID below.</b></p>',
+//   questions: [
+//     {
+//       prompt: 'SONA ID:',
+//       name: 'sona_id',
+//       required: true,
+//       placeholder: 'Enter your ID',
+//       columns: 30
+//     }
+//   ],
+//   button_label: 'Continue',
+//   data: { phase: 'sona_id', qid: 'sona_id' },
+//   on_finish: function (data) {
+//     var pid = data.response.sona_id.trim();
+//     data.sona_id = pid;
+//     // attach the ID to every subsequent row of data
+//     jsPsych.data.addProperties({ sona_id: pid });
+//   }
+// };
+// timeline.push(participant_id);
 
  var intro = {
     type: jsPsychHtmlButtonResponse,
