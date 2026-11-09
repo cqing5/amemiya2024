@@ -15,8 +15,11 @@
   <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
   <style>
     .jspsych-content {
-      max-width: 800px;
+      max-width: 98% !important;
       padding: 0 40px;
+    }
+    .jspsych-btn-group-grid {
+      width: 98vw; justify-content: center;
     }
   </style>
 </head>
@@ -212,6 +215,29 @@ var params = new URLSearchParams(window.location.search);
   };
   timeline.push(welcome);
 
+var participant_id = {
+  type: jsPsychSurveyText,
+  preamble: '<p><b>Please enter your SONA participant ID below.</b></p>',
+  questions: [
+    {
+      prompt: 'SONA ID:',
+      name: 'sona_id',
+      required: true,
+      placeholder: 'Enter your ID',
+      columns: 30
+    }
+  ],
+  button_label: 'Continue',
+  data: { phase: 'sona_id', qid: 'sona_id' },
+  on_finish: function (data) {
+    var pid = data.response.sona_id.trim();
+    data.sona_id = pid;
+    // attach the ID to every subsequent row of data
+    jsPsych.data.addProperties({ sona_id: pid });
+  }
+};
+timeline.push(participant_id_trial);
+
  var intro = {
     type: jsPsychHtmlButtonResponse,
     stimulus: 
@@ -324,11 +350,12 @@ timeline = timeline.concat(quiz({
 
   // NEWS STORY + ATTENTION CHECK (with corrective feedback)
   timeline.push(info(
-    '<p>Now, please read the news story below:</p>' +
+    '<p><b>Now, please read the news story below:</b></p>' +
+    '<div style="text-align:left; max-width:800px; margin:0 auto;">' +
     '<p>November 2024 &mdash; In five regions of the world (Hawaii, United States; Hokkaido, Japan; ' +
     'Te Waipounamu, New Zealand; Oregon, United States; California, United States), there was a novel virus ' +
-    'that began to spread. Leaders of the regions were unsure about what to do because this was a novel virus ' +
-    'that had never been seen before. But, together, the leaders decided on a set of public policies, called Policy A. ' +
+    'that began to spread. <br><br> Leaders of the regions were unsure about what to do because this was a novel virus ' +
+    'that had never been seen before. But, together, the leaders decided on a set of public policies, called Policy A. <br><br>' +
     'Hawaiian leaders chose to implement Policy A on Day 5 to see if it would reduce infections. ' +
     'The other four regions did not implement Policy A, waiting to see whether it worked in Hawaii.</p>'
   ));
@@ -380,9 +407,10 @@ timeline = timeline.concat(quiz({
     button_layout: 'grid',
     grid_columns: 2,
     button_html: function (choice) {
-      return '<button class="jspsych-btn" style="background:#fff; border:2px solid #999; padding:8px; margin:6px;">' +
-        '<div><b>(' + choice + ')</b></div>' +
-        '<img src="stimuli/' + S[choice] + '" style="width:100%; height:auto;">' +
+      return '<button class="jspsych-btn" style="background:#fff; border:2px solid #999; padding:10px; margin:8px; ' +
+        'width:46vw; max-width:900px; cursor:pointer;">' +
+        '<div style="font-size:20px; margin-bottom:6px;"><b>(' + choice + ')</b></div>' +
+        '<img src="stimuli/' + S[choice] + '" style="width:100%; height:auto; display:block;">' +
         '</button>';
     },
     data: { phase: 'DV', qid: 'graph_selection' },
@@ -478,7 +506,7 @@ timeline = timeline.concat(quiz({
   // age, gender, race (open text)
   var demographics_text = {
     type: jsPsychSurveyText,
-    preamble: '<p>This last part will ask you some basic demographic information./p>',
+    preamble: '<p><b>This last part will ask you some basic demographic information.</b></p>',
     questions: [
       { prompt: 'What is your age (in years)?', name: 'age', rows: 1, columns: 20, required: true },
       { prompt: 'What gender do you identify as?', name: 'gender', rows: 1, columns: 40, required: true },
