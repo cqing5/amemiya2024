@@ -25,6 +25,46 @@
 </head>
 <body></body>
 <script>
+(async function () {
+  // balanced condition assignment with random fallback; DataPipe hands out condition numbers 0-3 in rotation
+  var DATAPIPE_ID = "mxFHTxfnA4hO";
+  var CELLS = [
+    { motivation: 'support', emphasis: 'US' },
+    { motivation: 'support', emphasis: 'Island' },
+    { motivation: 'reject',  emphasis: 'US' },
+    { motivation: 'reject',  emphasis: 'Island' }
+  ];
+
+  var params = new URLSearchParams(window.location.search);
+  var url_motivation = params.get('motivation');
+  var url_emphasis   = params.get('emphasis');
+
+  var cell = {};
+  var condition_index = null;
+  var assignment_source = 'url';
+
+  // for testing: giving both URL parameters (e.g., ?motivation=reject&emphasis=Island); skips DataPipe so test runs don't use up assignment slots
+  if (!(url_motivation && url_emphasis)) {
+    try {
+      var n = Number(await Promise.race([
+        jsPsychExtensionPipe.getCondition(DATAPIPE_ID),
+        new Promise(function (_, reject) {
+          setTimeout(function () { reject(new Error('timeout')); }, 5000);
+        })
+      ]));
+      if (!Number.isInteger(n) || n < 0 || n > 3) { throw new Error('unexpected condition: ' + n); }
+      condition_index = n;
+      assignment_source = 'datapipe';
+    } catch (e) {
+      // random fallback (jsPsych doesn't exist yet, so use Math.random)
+      console.warn('DataPipe condition assignment failed; using random fallback.', e);
+      condition_index = Math.floor(Math.random() * 4);
+      assignment_source = 'random_fallback';
+    }
+    cell = CELLS[condition_index];
+  }
+  var motivation = url_motivation || cell.motivation;   // "support" or "reject"
+  var emphasis   = url_emphasis   || cell.emphasis;     // "US" or "Island"
 
   // initialize jsPsych
   var jsPsych = initJsPsych({
@@ -52,20 +92,26 @@
   // get SONA ID
   var id = jsPsych.data.getURLVariable('id');
 
-  // randomly assign participants to: 
+  // **** OLD **** randomly assign participants to: 
   //   motivation: "support" or "reject"
   //   emphasis:    "US" or "Island" (which comparison set is the "supporting" one)
   // assign server-side and pass in the URL, e.g. index.html?motivation=reject&emphasis=Island
-var params = new URLSearchParams(window.location.search);
-  var motivation = params.get('motivation') ||
-    jsPsych.randomization.sampleWithoutReplacement(['support', 'reject'], 1)[0];
-  var emphasis = params.get('emphasis') ||
-    jsPsych.randomization.sampleWithoutReplacement(['US', 'Island'], 1)[0];
+// var params = new URLSearchParams(window.location.search);
+//   var motivation = params.get('motivation') ||
+//     jsPsych.randomization.sampleWithoutReplacement(['support', 'reject'], 1)[0];
+//   var emphasis = params.get('emphasis') ||
+//     jsPsych.randomization.sampleWithoutReplacement(['US', 'Island'], 1)[0];
 
+// use to check counts
+  // console.log('ASSIGNMENT:', assignment_source, 'condition_index =', condition_index, motivation, emphasis);
+
+  // save condition info on every row of data
   jsPsych.data.addProperties({
     subject_id: subject_id,
     motivation: motivation,
-    emphasis: emphasis
+    emphasis: emphasis,
+    condition_index: condition_index,
+    assignment_source: assignment_source
   });
 
   // condition-dependent wording (to use in the vignettes/questions)
@@ -585,7 +631,9 @@ timeline = timeline.concat(quiz({
 timeline.push(debrief);
 
   // start the experiment
-  jsPsych.run(timeline);
+    jsPsych.run(timeline);
+
+})();
 
 </script>
 
