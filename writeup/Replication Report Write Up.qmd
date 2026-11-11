@@ -53,18 +53,14 @@ Participants then read the following vignette as they are randomly assigned to i
 
 Next, participants will view a full five-location graph and describe the data in their own words. The graph is a figure that plots new virus cases over Days 0-10 for all five regions, with a vertical line at Day 5 marking the intervention. Hawaii's cases are shown to drop sharply right after Day 5, so there was strong temporal covariation between policy and decline in every condition. Oregon and California kept climbing after Day 5, implying the supporting counterfactual inference that Hawaii's cases would have continued to rise without the policy. Hokkaido and Te Waipounamu declined on their own after Day 5, implying the rejecting counterfactual inference that Hawaii's cases would have fallen even without the policy.
 
-The primary outcome is whether participants would use comparison cases to their advantage, such that they would choose to show supporting comparison cases implying the counterfactual that virus cases would have been worse in the Motivated to Support condition (i.e., Option B),
-but would show the rejecting comparison cases implying that the counterfactual that virus
-cases would have declined anyway in the Motivated to Reject condition (i.e., Option C). Participants will choose one of the four following graphs to present on the nightly news in support of their assigned position and provide an open-ended explanation for their choice: (a) Target only: Hawaii's trajectory alone (this option is included to assess whether participants prefer to include comparison cases when given the choice not to); (b) Target + Supporting Comparisons: Hawaii plus Oregon and California; (c) Target + Rejecting Comparisons: Hawaii plus Hokkaido and Te Waipounamu; and (d) Target + All Comparisons: all five regions. I will counterbalance whether the U.S. states or islands were causal by creating another set of graphs that swap the labels of Oregon and California with Hokkaido and Te Waipounamu. 
+The primary outcome is whether participants would use comparison cases to their advantage, such that they would choose to show supporting comparison cases implying the counterfactual that virus cases would have been worse in the Motivated to Support condition (i.e., Option B), but would show the rejecting comparison cases implying that the counterfactual that virus cases would have declined anyway in the Motivated to Reject condition (i.e., Option C). Participants will choose one of the four following graphs to present on the nightly news in support of their assigned position and provide an open-ended explanation for their choice: (a) Target only: Hawaii's trajectory alone (this option is included to assess whether participants prefer to include comparison cases when given the choice not to); (b) Target + Supporting Comparisons: Hawaii plus Oregon and California; (c) Target + Rejecting Comparisons: Hawaii plus Hokkaido and Te Waipounamu; and (d) Target + All Comparisons: all five regions. I will counterbalance whether the U.S. states or islands were causal by creating another set of graphs that swap the labels of Oregon and California with Hokkaido and Te Waipounamu. 
 
 Participants will complete five comprehension/manipulation checks throughout the task. 
 
-Beyond replicating the original study, I am also interested investigating how people evaluate evidence selected by others. I plan to present participants with a graph chosen by another politician who supports or opposes Policy A and ask them to infer the politician's support/opposition based on the evidence they selected. The order in which this and the main trial are presented would be counterbalanced. 
-
 ### Analysis Plan
-To be included in the analyses, participants will need to get all four comprehension/manipulation check questions correct. The exclusion criteria will be preregistered before data collection. 
+To be included in the analyses, participants will need to get all five comprehension/manipulation check questions correct. The exclusion criteria will be preregistered before data collection. 
 
-As the key analysis of interest, I will conduct a chi-square test of independence on a 2 (motivation: Support vs. Reject) × 4 (data selection: Target Only, Target + Supporting, Target + Rejecting, Target + All) contingency table.
+I will test whether participants selectively present comparisons consistent with their assigned position by running two sets of logistic regressions: one that predicts selecting the supporting comparison cases (Option B), and one that predicts selecting the rejecting comparison cases (Option C). However, if very few participants select certain graphs in some experimental conditions, logistic regression may not provide reliable estimates. As a result, I will also use a Chi-square test on a 2 (motivation: Support vs. Reject) × 4 (data selection: Target Only, Target + Supporting, Target + Rejecting, Target + All) contingency table. 
 
 In addition, I will test whether the emphasized dimension (islands vs. U.S. states) predicts
 participants’ causal judgments and whether it interacts with experimental condition, as in the
@@ -134,7 +130,6 @@ dv <- raw_data %>%
     emphasis,
     choice_letter,
     choice_label
-    # dv_rt_ms     = as.numeric(rt)
   )
 
 # combine + apply exclusions

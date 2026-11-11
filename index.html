@@ -35,6 +35,8 @@
         '<h2>Thank you!</h2>' +
         '<p>You have completed the study. Your responses have been recorded, and you may now close this window.</p>' +
         '</div>';
+      //redirect to SONA
+      window.location = "https://ucsd.sona-systems.com/webstudy_credit.aspx?experiment_id=3172&credit_token=31cbecdc27fd4b44abc3df1e96b767ab&survey_code="+id;
     },
     // send the data to DataPipe
     extensions: [
@@ -52,6 +54,9 @@
 
   // give each participant a random ID. Their data file is named after it.
   var subject_id = jsPsych.randomization.randomID(10);
+
+  // get SONA ID
+  var sona_id = jsPsych.data.getURLVariable('id');
 
   // randomly assign participants to: 
   //   motivation: "support" or "reject"
@@ -214,30 +219,6 @@ var params = new URLSearchParams(window.location.search);
     choices: ['I agree to participate in this research study.']
   };
   timeline.push(welcome);
-
-// leave out for now while testing
-// var participant_id = {
-//   type: jsPsychSurveyText,
-//   preamble: '<p><b>Please enter your SONA participant ID below.</b></p>',
-//   questions: [
-//     {
-//       prompt: 'SONA ID:',
-//       name: 'sona_id',
-//       required: true,
-//       placeholder: 'Enter your ID',
-//       columns: 30
-//     }
-//   ],
-//   button_label: 'Continue',
-//   data: { phase: 'sona_id', qid: 'sona_id' },
-//   on_finish: function (data) {
-//     var pid = data.response.sona_id.trim();
-//     data.sona_id = pid;
-//     // attach the ID to every subsequent row of data
-//     jsPsych.data.addProperties({ sona_id: pid });
-//   }
-// };
-// timeline.push(participant_id);
 
  var intro = {
     type: jsPsychHtmlButtonResponse,
