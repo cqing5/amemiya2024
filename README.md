@@ -7,6 +7,7 @@ support a particular agenda.
 ---
 
 ## Repository Layout
+```
 .
 ├── data/
 │   ├── self-pilot/   
@@ -34,3 +35,4 @@ support a particular agenda.
 │   └── Replication Report Write Up_files/
 ├── LICENSE
 └── README.md
+```
