@@ -62,10 +62,6 @@ To be included in the analyses, participants will need to get all five comprehen
 
 I will use a Chi-square test on a 2 (motivation: Support vs. Reject) × 4 (data selection: Target Only, Target + Supporting, Target + Rejecting, Target + All) contingency table to evaluate whether participants' graph selection varies by study condition. I will follow this up by testing whether participants selectively present comparisons consistent with their assigned position by running two sets of logistic regressions: one that predicts selecting the supporting comparison cases (Option B), and one that predicts selecting the rejecting comparison cases (Option C).  
 
-In addition, I will test whether the emphasized dimension (islands vs. U.S. states) predicts
-participants’ causal judgments and whether it interacts with experimental condition, as in the
-original study. 
-
 ### Differences from Original Study
 First, the original study recruited both college undergraduates and participants from Prolific, whereas I will recruit exclusively from a college undergraduate participant pool. As a result, my sample will may be less demographically diverse. However, the effect size with these participants is larger, and this would allow for a closer replication, as the students from the original study are also from UCSD. 
 
@@ -143,30 +139,50 @@ data_for_analysis <- all_participants %>%
   filter(passed_all_chks, !is.na(choice_label)) %>%
   mutate(choice_label = factor(choice_label))
 
-cat("Participants retained:", nrow(data_for_analysis), "\n")
+cat("Number of participants retained:", nrow(data_for_analysis))
 
 ```
 
 ### Confirmatory analysis
 
 ```{r include=F}
-# 2 (motivation) x 4 (data selection) contingency table
+
+# CHI SQUARE: 2 (motivation) x 4 (data selection) contingency table
 tab <- table(data_for_analysis$motivation, data_for_analysis$choice_label)
-
 print(chisq.test(tab))
+cramersV(tab) # effect size
 
-# effect size
-cramersV(tab)
+# LOGISTIC REGRESSIONS
+data_for_analysis <- data_for_analysis %>%
+  mutate(
+    cond_support      = as.integer(motivation == "support"),
+    cond_reject       = as.integer(motivation == "reject"),
+    emphasis_island   = if_else(emphasis == "Island", 1, -1),  # same coding as original study
+    select_supporting = as.integer(choice_label == "target_support"),  # option B
+    select_rejecting  = as.integer(choice_label == "target_reject")    # option C
+  )
 
-# percentages by condition
-round(prop.table(tab, margin = 1) * 100, 1)
+# supporting comparison cases (option B)
+m_supporting <- glm(select_supporting ~ cond_support + emphasis_island,
+                    data = data_for_analysis, family = "binomial")
+summary(m_supporting)
+confint(m_supporting)
+exp(coef(m_supporting))   # odds ratios
+
+# rejecting comparison cases (option C)
+m_rejecting <- glm(select_rejecting ~ cond_reject + emphasis_island,
+                   data = data_for_analysis, family = "binomial")
+summary(m_rejecting)
+confint(m_rejecting)
+exp(coef(m_rejecting))    # odds ratios
 ```
 
 *Side-by-side graph with original graph is ideal here*
 
 ### Exploratory analyses
+For a secondary analysis, I will test whether the emphasized dimension (islands vs. U.S. states) predicts participants’ graph choice and whether it interacts with experimental condition, as in the original study.
 
-Any follow-up analyses desired (not required).  
+I will analyze participants' open-ended responses explaining their selections ("Imagine that someone saw all of the data for all 5 cities, and asked why you to explain why you chose to show this particular graph"). These qualitative responses will be explored to make sense of the graph selections. Of interest here is the extent to which participants mention that Hawaii shares similarities with the locations that they chose (e.g., if they chose to only show the others islands, if they say Hawaii is more similar to other islands than the other U.S. states). It is expected that participants will be especially likely to claim similarity when those locations' data support their causal claim.
 
 ## Discussion
 
