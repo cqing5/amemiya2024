@@ -89,6 +89,9 @@
   // give each participant a random ID; their data file is named after it
   var subject_id = jsPsych.randomization.randomID(10);
 
+  // get SONA ID
+  var id = jsPsych.data.getURLVariable('id');
+
   // **** OLD **** randomly assign participants to: 
   //   motivation: "support" or "reject"
   //   emphasis:    "US" or "Island" (which comparison set is the "supporting" one)
