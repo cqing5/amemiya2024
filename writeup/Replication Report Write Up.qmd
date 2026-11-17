@@ -91,7 +91,8 @@ Exclude participants who do not get all of the comprehension checks correct.
 	
 ```{r include=F}
 ### Data Preparation
-files <- list.files("/Users/caqing/Documents/GitHub/amemiya2024/data/self-pilot", full.names = TRUE)
+# path relative to writeup/ (where Quarto renders), so the report runs on any computer
+files <- list.files("../data/self-pilot", full.names = TRUE)
 
 #### Load Relevant Libraries and Functions
 library(tidyverse)
