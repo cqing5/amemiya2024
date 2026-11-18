@@ -55,7 +55,7 @@ Next, participants will view a full five-location graph and describe the data in
 
 The primary outcome is whether participants would use comparison cases to their advantage, such that they would choose to show supporting comparison cases implying the counterfactual that virus cases would have been worse in the Motivated to Support condition (i.e., Option B), but would show the rejecting comparison cases implying that the counterfactual that virus cases would have declined anyway in the Motivated to Reject condition (i.e., Option C). Participants will choose one of the four following graphs to present on the nightly news in support of their assigned position and provide an open-ended explanation for their choice: (a) Target only: Hawaii's trajectory alone (this option is included to assess whether participants prefer to include comparison cases when given the choice not to); (b) Target + Supporting Comparisons: Hawaii plus Oregon and California; (c) Target + Rejecting Comparisons: Hawaii plus Hokkaido and Te Waipounamu; and (d) Target + All Comparisons: all five regions. I will counterbalance whether the U.S. states or islands were causal by creating another set of graphs that swap the labels of Oregon and California with Hokkaido and Te Waipounamu. 
 
-Participants will complete five comprehension/manipulation checks throughout the task. 
+Participants will complete two in-story checks with feedback, plus five final comprehension checks. Only the final five are used for exclusion.
 
 ### Analysis Plan
 To be included in the analyses, participants will need to get all five comprehension/manipulation check questions correct. The exclusion criteria will be preregistered before data collection. 
@@ -91,7 +91,7 @@ Exclude participants who do not get all of the comprehension checks correct.
 	
 ```{r include=F}
 ### Data Preparation
-files <- list.files("/Users/caqing/Documents/GitHub/amemiya2024/data/self-pilot", full.names = TRUE)
+files <- list.files("../data/pilot-b", full.names = TRUE)
 
 #### Load Relevant Libraries and Functions
 library(tidyverse)
@@ -140,6 +140,20 @@ data_for_analysis <- all_participants %>%
   mutate(choice_label = factor(choice_label))
 
 cat("Number of participants retained:", nrow(data_for_analysis))
+
+# total time per participant 
+completion_times <- raw_data %>%
+  mutate(time_elapsed = as.numeric(time_elapsed)) %>% 
+  group_by(source_file, subject_id) %>%
+  summarise(total_ms = max(time_elapsed, na.rm = TRUE), .groups = "drop") %>%
+  mutate(total_min = total_ms / 1000 / 60)
+
+# keep only the participants in analysis sample
+times_analyzed <- completion_times %>%
+  semi_join(data_for_analysis, by = c("source_file", "subject_id"))
+
+# average completion time: ~11 min
+mean(completion_times$total_min)
 
 ```
 
