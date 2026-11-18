@@ -24,7 +24,7 @@ See the project repository [here](https://github.com/cqing5/amemiya2024) and the
 ### Power Analysis
 The power analysis below indicates that 68 participants would be needed to detect a medium to large effect size (w = .40) with a power of .80 and alpha level of .05. Note that the authors conducted a power analysis in G*Power that indicated they would need 61 participants to detect the same effect, and that they roughly doubled their sample size to 120 to allow for exploratory analyses. 
 
-```{r include=F}
+```{r}
 library(pwr)
 
 power_analysis <- pwr.chisq.test(w = 0.40, df = 3, sig.level = 0.05, power = 0.80)
@@ -89,93 +89,90 @@ You can comment this section out prior to final report with data collection.
 
 Exclude participants who do not get all of the comprehension checks correct. 
 	
-```{r include=F}
-### Data Preparation
-files <- list.files("../data/pilot-b", full.names = TRUE)
-
-#### Load Relevant Libraries and Functions
+```{r}
+#### load relevant libraries and functions
 library(tidyverse)
 library(lsr)
+library(assertthat)
 
-#### Import data
-raw_data <- map_dfr(
-  files,
-  ~ read_csv(.x, col_types = cols(.default = "c"), show_col_types = FALSE) %>%
-      mutate(source_file = basename(.x))
-)
+### import data
+files <- list.files("../data/full", full.names = TRUE)
 
-# score attention checks (5 total)
-# `correct` is written as "true"/"false", so convert  to logical
-chk_summary <- raw_data %>%
-  filter(phase == "check") %>%
-  mutate(correct = tolower(correct) == "true") %>%
+raw_data <- files %>%
+  set_names(basename(.)) %>%
+  map_dfr(read_csv, col_types = cols(.default = "c"), show_col_types = FALSE,
+          .id = "source_file")
+
+# check that raw data has all expected columns
+assert_that(all(c("subject_id", "phase", "qid", "motivation", "emphasis",
+        "choice_label", "correct", "time_elapsed") %in% names(raw_data)))
+
+participants <- raw_data %>%
   group_by(source_file, subject_id) %>%
   summarise(
-    n_checks  = n(),
-    n_correct = sum(correct, na.rm = TRUE),
-    .groups   = "drop"
-  ) %>%
-  mutate(passed_all_chks = n_correct == 5)
-
-# pull out the DV and condition (one row per participant)
-dv <- raw_data %>%
-  filter(qid == "graph_selection") %>%
-  transmute(
-    source_file, subject_id,
-    motivation   = factor(motivation, levels = c("support", "reject")),
-    emphasis,
-    choice_letter,
-    choice_label
+    # count correct check answers
+    n_correct    = sum(phase %in% "check" & correct == "true", na.rm = TRUE),
+    motivation   = first(motivation),
+    emphasis     = first(emphasis),
+    choice_label = choice_label[!is.na(choice_label)][1],
+    total_min    = max(as.numeric(time_elapsed), na.rm = TRUE) / 60000,
+    .groups = "drop"
   )
 
-# combine + apply exclusions
-# start from every participant who appears in any file, so anyone who quit before the checks (no check rows) counts as failing
-all_participants <- raw_data %>% distinct(source_file, subject_id)
+data_for_analysis <- participants %>%
+  # exclude participants who don't pass all checks
+  filter(n_correct == 5, !is.na(choice_label)) %>%
+  mutate(
+    motivation        = factor(motivation, levels = c("support", "reject")),
+    choice_label      = factor(choice_label),
+    # codings for logistic regressions (same as the original study)
+    cond_support      = as.integer(motivation == "support"),
+    cond_reject       = as.integer(motivation == "reject"),
+    emphasis_island   = if_else(emphasis == "Island", 1, -1),
+    select_supporting = as.integer(choice_label == "target_support"), # option B
+    select_rejecting  = as.integer(choice_label == "target_reject") # option C
+  )
 
-data_for_analysis <- all_participants %>%
-  left_join(chk_summary, by = c("source_file", "subject_id")) %>%
-  left_join(dv,               by = c("source_file", "subject_id")) %>%
-  mutate(passed_all_chks = replace_na(passed_all_chks, FALSE)) %>%
-  filter(passed_all_chks, !is.na(choice_label)) %>%
-  mutate(choice_label = factor(choice_label))
+# check that all four motivation x emphasis cells have participants
+assert_that(nrow(distinct(data_for_analysis, motivation, emphasis)) == 4)
 
-cat("Number of participants retained:", nrow(data_for_analysis))
+cat("Number of participants retained:", nrow(data_for_analysis), "\n")
+cat("Average completion time:", mean(data_for_analysis$total_min), "minutes")
+```
 
-# total time per participant 
-completion_times <- raw_data %>%
-  mutate(time_elapsed = as.numeric(time_elapsed)) %>% 
-  group_by(source_file, subject_id) %>%
-  summarise(total_ms = max(time_elapsed, na.rm = TRUE), .groups = "drop") %>%
-  mutate(total_min = total_ms / 1000 / 60)
+```{r}
+### sanity check graphs
+ggplot(data_for_analysis, aes(x = motivation, fill = emphasis)) +
+  geom_bar(position = position_dodge(width = 1)) +
+  geom_text(stat = "count", aes(label = after_stat(count)),
+            position = position_dodge(width = 1), vjust = -0.4, size = 5) +
+  scale_x_discrete(labels = c("Motivated to Support", "Motivated to Reject")) +
+#  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(title = "Participants per condition",
+       x = "Motivation", y = "# of participants", fill = "Emphasis")
 
-# keep only the participants in analysis sample
-times_analyzed <- completion_times %>%
-  semi_join(data_for_analysis, by = c("source_file", "subject_id"))
-
-# average completion time: ~11 min
-mean(completion_times$total_min)
-
+participants %>%
+  mutate(n_correct = factor(n_correct, levels = 0:5), passed = n_correct == "5") %>%
+  ggplot(aes(x = n_correct, fill = passed)) +
+  geom_bar() +
+  geom_text(stat = "count", aes(label = after_stat(count)), vjust = -0.4, size = 5) +
+  scale_fill_manual(values = c("TRUE" = "darkblue", "FALSE" = "gray"),
+                    labels = c("TRUE" = "Retained", "FALSE" = "Excluded")) +
+  labs(title = "Checks answered correctly",
+       x = "# of checks correct (out of 5)", y = "# of participants", fill = NULL)
 ```
 
 ### Confirmatory analysis
 
-```{r include=F}
+```{r}
 
 # CHI SQUARE: 2 (motivation) x 4 (data selection) contingency table
 tab <- table(data_for_analysis$motivation, data_for_analysis$choice_label)
 print(chisq.test(tab))
 cramersV(tab) # effect size
+fisher.test(tab)
 
 # LOGISTIC REGRESSIONS
-data_for_analysis <- data_for_analysis %>%
-  mutate(
-    cond_support      = as.integer(motivation == "support"),
-    cond_reject       = as.integer(motivation == "reject"),
-    emphasis_island   = if_else(emphasis == "Island", 1, -1),  # same coding as original study
-    select_supporting = as.integer(choice_label == "target_support"),  # option B
-    select_rejecting  = as.integer(choice_label == "target_reject")    # option C
-  )
-
 # supporting comparison cases (option B)
 m_supporting <- glm(select_supporting ~ cond_support + emphasis_island,
                     data = data_for_analysis, family = "binomial")
@@ -189,9 +186,42 @@ m_rejecting <- glm(select_rejecting ~ cond_reject + emphasis_island,
 summary(m_rejecting)
 confint(m_rejecting)
 exp(coef(m_rejecting))    # odds ratios
+
 ```
 
 *Side-by-side graph with original graph is ideal here*
+```{r}
+# version 1
+ggplot(data_for_analysis, aes(x = motivation, fill = choice_label)) +
+  geom_bar(position = position_dodge(), color = "black") +
+  scale_x_discrete(labels = c("Motivated to Support", "Motivated to Reject")) +
+  scale_fill_manual(
+    breaks = c("target_only", "target_support", "target_reject", "target_all"),
+    labels = c("Target Only", "Target + Supporting Comparisons",
+               "Target + Rejecting Comparisons", "Target + All Comparisons"),
+    values = c(target_only = "purple", target_support = "orange",
+               target_reject = "blue", target_all = "gray70")
+  ) +
+  labs(x = "Condition", y = "# Participants Selected Data for Nightly News",
+       fill = "Graph Options") +
+  theme_minimal()
+
+# version 2
+ggplot(data_for_analysis, aes(x = motivation, fill = choice_label)) +
+  geom_bar(position = position_dodge(), color = "black") +
+  scale_x_discrete(labels = c("Motivated to Support", "Motivated to Reject")) +
+  scale_fill_manual(
+    breaks = c("target_only", "target_support", "target_reject", "target_all"),
+    labels = c("Target Only", "Target + Supporting Comparisons",
+               "Target + Rejecting Comparisons", "Target + All Comparisons"),
+    values = c(target_only = "#E69F00", target_support = "#56B4E9",
+               target_reject = "#009E73", target_all = "#CC79A7")
+  ) +
+  labs(x = "Condition", y = "# Participants Selected Data for Nightly News",
+       fill = "Graph Options") +
+  theme_classic()
+
+```
 
 ### Exploratory analyses
 For a secondary analysis, I will test whether the emphasized dimension (islands vs. U.S. states) predicts participants’ graph choice and whether it interacts with experimental condition, as in the original study.
