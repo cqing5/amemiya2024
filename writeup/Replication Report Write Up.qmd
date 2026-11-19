@@ -193,7 +193,7 @@ exp(coef(m_rejecting))    # odds ratios
 
 *Side-by-side graph with original graph is ideal here*
 ```{r}
-# version 1
+# version 1 #Add a title (MH)
 ggplot(data_for_analysis, aes(x = motivation, fill = choice_label)) +
   geom_bar(position = position_dodge(), color = "black") +
   scale_x_discrete(labels = c("Motivated to Support", "Motivated to Reject")) +
@@ -208,7 +208,7 @@ ggplot(data_for_analysis, aes(x = motivation, fill = choice_label)) +
        fill = "Graph Options") +
   theme_minimal()
 
-# version 2
+# version 2 #love your colors!! 
 ggplot(data_for_analysis, aes(x = motivation, fill = choice_label)) +
   geom_bar(position = position_dodge(), color = "black") +
   scale_x_discrete(labels = c("Motivated to Support", "Motivated to Reject")) +
@@ -222,6 +222,8 @@ ggplot(data_for_analysis, aes(x = motivation, fill = choice_label)) +
   labs(x = "Condition", y = "# Participants Selected Data for Nightly News",
        fill = "Graph Options") +
   theme_classic()
+
+#Mikka notes: I would add titles and paste in your original graph
 
 ```
 
