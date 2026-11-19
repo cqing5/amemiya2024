@@ -9,9 +9,8 @@ support a particular agenda.
 ## Repository Layout
 ```
 .
-├── data/
-│   ├── self-pilot/   
-│   └── primary/ # shareable data (CSV) 
+├── data/  
+│   └── raw/ # shareable data; no PII (CSV) 
 ├── stimuli/
 │   ├── A-HawaiiOnly.png                     
 │   ├── Axes-Training.png                    
