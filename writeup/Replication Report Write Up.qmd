@@ -91,17 +91,19 @@ Exclude participants who do not get all of the comprehension checks correct.
 	
 ```{r}
 #### load relevant libraries and functions
+library(here)
+library(assertthat)
 library(tidyverse)
 library(lsr)
-library(assertthat)
 
 ### import data
-files <- list.files("../data/full", full.names = TRUE)
+files <- list.files(here("data", "raw"), full.names = TRUE)
 
-raw_data <- files %>%
-  set_names(basename(.)) %>%
-  map_dfr(read_csv, col_types = cols(.default = "c"), show_col_types = FALSE,
-          .id = "source_file")
+raw_data <- map_dfr(
+  files,
+  ~ read_csv(.x, col_types = cols(.default = "c"), show_col_types = FALSE) %>%
+      mutate(source_file = basename(.x))
+)
 
 # check that raw data has all expected columns
 assert_that(all(c("subject_id", "phase", "qid", "motivation", "emphasis",
